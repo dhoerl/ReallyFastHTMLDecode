@@ -29,7 +29,7 @@ static NSDictionary *translationDict;
 static NSCharacterSet *alphaSet;
 static NSCharacterSet *alphaNumSet;
 
-#if 0
+#if 1
 #define LOG NSLog
 #else
 #define LOG(x, ...) 
@@ -111,29 +111,16 @@ static NSCharacterSet *alphaNumSet;
 				NSScanner *scanner = [NSScanner scannerWithString:chunk];
 				[scanner scanString:isHex ? @"#x" : @"#" intoString:NULL];	// skip prefix
 
-				BOOL success;
-				unichar tc;
-				if(isHex) {
-					unsigned int i;
-					success = [scanner scanHexInt:&i];
-					if(success && i > 0 && i <= 0xFFFD) {
-						tc = (unichar)i;
-					} else {
-						success = FALSE;
-					}
-				} else {
-					int i;
-					success = [scanner scanInt:&i];
-					if(success && i >= 0 && i <= 0xFFFD) {
-						tc = (unichar)i;
-					} else {
-						success = FALSE;
-					}
-				}
-				if(success && [scanner scanString:@";" intoString:NULL]) {
-					LOG(@"Numeric Code: tc=%d", tc);
+				int i = 0;
+				BOOL success = isHex ? [scanner scanHexInt:(unsigned int *)&i] : [scanner scanInt:&i];
+
+				if(success && i > 0 && i <= 0xFFFD && [scanner scanString:@";" intoString:NULL]) {
+					unichar tc = (unichar)i;
+					LOG(@"Numeric Code: tc=%d", (int)tc);
 					[newChunk appendFormat:@"%C%@", tc, [chunk substringFromIndex:[scanner scanLocation]]];
 					useOriginal = NO;
+				} else {
+					LOG(@"BAD Numeric Code: tc=%u", i);
 				}
 			}
 			
